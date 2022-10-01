@@ -1,209 +1,97 @@
-import Head from 'next/head'
+import React, { Component } from "react";
+import ReactDOM from "react-dom";
 
-export default function Home() {
-  return (
-    <div className="container">
-      <Head>
-        <title>Create Next App</title>
-        <link rel="icon" href="/favicon.ico" />
-      </Head>
 
-      <main>
-        <h1 className="title">
-          Welcome to <a href="https://nextjs.org">Next.js!</a>
-        </h1>
+export default class PollingExample extends Component {
+  state = {
+    last_refreshed: Math.floor(Date.now()/1000),
+    current_time: Math.floor(Date.now()/1000),
+    last_refreshed_readable: "",
+    bottom_headsign: "",
+    top_headsign: "",
+    bottom_trains: [],
+    top_trains:[],
+  };
 
-        <p className="description">
-          Get started by editing <code>pages/index.js</code>
-        </p>
+  componentDidMount() {
+  this.interval = setInterval(this.tick, 30000);
+  this.interval = setInterval(this.tock, 1000);
+}
+componentDidUpdate(prevProps, prevState) {
+  if (prevState.delay != this.state.delay) {
+    clearInterval(this.interval);
+    this.interval = setInterval(this.tick, this.state.delay);
+  }
+}
+componentWillUnmount() {
+  clearInterval(this.interval);
+}
 
-        <div className="grid">
-          <a href="https://nextjs.org/docs" className="card">
-            <h3>Documentation &rarr;</h3>
-            <p>Find in-depth information about Next.js features and API.</p>
-          </a>
+tick = () => {
+  fetch('https://otp-mta-prod.camsys-apps.com/otp/routers/default/nearby?stops=MTASBWY%3AA44&apikey=Z276E3rCeTzOQEoBPPN4JCEc6GfvdnYE')
+    .then(result => result.json())
+    .then(result => this.setState({
+      last_refreshed: Math.floor(Date.now()/1000),
+      bottom_headsign: result[0]['groups'][0].headsign,
+      top_headsign: result[0]['groups'][1].headsign,
+      bottom_trains: result[0]['groups'][0].times,
+      top_trains: result[0]['groups'][1].times,
+    }))
+    .catch(err => {
+    console.error('Uh oh, an error!', err);
+  })
+    var today = new Date();
+    var time = today.getHours() + ":" + today.getMinutes();
+    var date = today.getFullYear()+'-'+(today.getMonth()+1)+'-'+today.getDate();
+    this.setState({last_refreshed_readable: date + " " + time})
+    console.log(this.state);
+}
 
-          <a href="https://nextjs.org/learn" className="card">
-            <h3>Learn &rarr;</h3>
-            <p>Learn about Next.js in an interactive course with quizzes!</p>
-          </a>
+tock = () => {
+  this.setState({
+      current_time: Math.floor(Date.now()/1000)
+    })
+}
 
-          <a
-            href="https://github.com/vercel/next.js/tree/master/examples"
-            className="card"
-          >
-            <h3>Examples &rarr;</h3>
-            <p>Discover and deploy boilerplate example Next.js projects.</p>
-          </a>
+render(){
+  const zeroPad = (num, places) => String(num).padStart(places, '0')
 
-          <a
-            href="https://vercel.com/import?filter=next.js&utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className="card"
-          >
-            <h3>Deploy &rarr;</h3>
-            <p>
-              Instantly deploy your Next.js site to a public URL with Vercel.
-            </p>
-          </a>
-        </div>
-      </main>
+   const top_trains = (
+  <ul style = {{display: "flex", paddingLeft:"0",flexDirection: "column", float: "none", width: "100%", borderTop: "1px solid #dfdfe0"}}>
+    {this.state.top_trains.map((t) =>
+      <li key = {t.tripId} style = {{padding: "10px 15px", border: "none", borderBottom: "1px solid #dfdfe0", display: "flex", float: "left", listStyle: "none", marginBottom: "0", overflow:"hidden", alignItems: "center"}}>
+        <span style = {{float: "left", backgroundColor: "gray", textAlign: "center", color:"white", fontSize: "x-large", margin:"0", height:"32px", width: "32px", border: "2px solid #fff", borderRadius: "50%", display: "block", backgroundImage: "background-image: url(https://new.mta.info/themes/custom/bootstrap_mta/js/apps/ec805c7415caff62cc2641469574683c.svg)"}}><p style={{margin:"0", marginTop: "2px"}}>{t.pattern.id.substr(8,1)}</p></span>
+        <span style = {{marginLeft: "10px", position: "static"}}>{t.tripHeadsign}</span>
+        <span style = {{marginLeft: "auto", float: "right", backgroundColor: "#777",borderRadius: "10px",color: "#fff", display: "inline-block",fontSize: "14px",fontWeight: "700",lineHeight: "1",minWidth: "10px",padding: "3px 7px", textAlign: "center",verticalAlign: "middle",whiteSpace: "nowrap"}}>{new Date(t.departureFmt).toLocaleTimeString("en-US", {timeZone: "America/New_York"})}</span>
+        <span style = {{fontWeight: "700",paddingLeft: "5px",position: "relative",width: "20%"}}>{zeroPad(Math.floor((new Date(t.departureFmt) - new Date())/60000),2)} mins away</span>
+      </li>
+    )}
+  </ul>
+)
 
-      <footer>
-        <a
-          href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Powered by{' '}
-          <img src="/vercel.svg" alt="Vercel" className="logo" />
-        </a>
-      </footer>
-
-      <style jsx>{`
-        .container {
-          min-height: 100vh;
-          padding: 0 0.5rem;
-          display: flex;
-          flex-direction: column;
-          justify-content: center;
-          align-items: center;
-        }
-
-        main {
-          padding: 5rem 0;
-          flex: 1;
-          display: flex;
-          flex-direction: column;
-          justify-content: center;
-          align-items: center;
-        }
-
-        footer {
-          width: 100%;
-          height: 100px;
-          border-top: 1px solid #eaeaea;
-          display: flex;
-          justify-content: center;
-          align-items: center;
-        }
-
-        footer img {
-          margin-left: 0.5rem;
-        }
-
-        footer a {
-          display: flex;
-          justify-content: center;
-          align-items: center;
-        }
-
-        a {
-          color: inherit;
-          text-decoration: none;
-        }
-
-        .title a {
-          color: #0070f3;
-          text-decoration: none;
-        }
-
-        .title a:hover,
-        .title a:focus,
-        .title a:active {
-          text-decoration: underline;
-        }
-
-        .title {
-          margin: 0;
-          line-height: 1.15;
-          font-size: 4rem;
-        }
-
-        .title,
-        .description {
-          text-align: center;
-        }
-
-        .description {
-          line-height: 1.5;
-          font-size: 1.5rem;
-        }
-
-        code {
-          background: #fafafa;
-          border-radius: 5px;
-          padding: 0.75rem;
-          font-size: 1.1rem;
-          font-family: Menlo, Monaco, Lucida Console, Liberation Mono,
-            DejaVu Sans Mono, Bitstream Vera Sans Mono, Courier New, monospace;
-        }
-
-        .grid {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          flex-wrap: wrap;
-
-          max-width: 800px;
-          margin-top: 3rem;
-        }
-
-        .card {
-          margin: 1rem;
-          flex-basis: 45%;
-          padding: 1.5rem;
-          text-align: left;
-          color: inherit;
-          text-decoration: none;
-          border: 1px solid #eaeaea;
-          border-radius: 10px;
-          transition: color 0.15s ease, border-color 0.15s ease;
-        }
-
-        .card:hover,
-        .card:focus,
-        .card:active {
-          color: #0070f3;
-          border-color: #0070f3;
-        }
-
-        .card h3 {
-          margin: 0 0 1rem 0;
-          font-size: 1.5rem;
-        }
-
-        .card p {
-          margin: 0;
-          font-size: 1.25rem;
-          line-height: 1.5;
-        }
-
-        .logo {
-          height: 1em;
-        }
-
-        @media (max-width: 600px) {
-          .grid {
-            width: 100%;
-            flex-direction: column;
-          }
-        }
-      `}</style>
-
-      <style jsx global>{`
-        html,
-        body {
-          padding: 0;
-          margin: 0;
-          font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto,
-            Oxygen, Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue,
-            sans-serif;
-        }
-
-        * {
-          box-sizing: border-box;
-        }
-      `}</style>
+   const bottom_trains = (
+  <ul style = {{display: "flex", paddingLeft:"0", flexDirection: "column", float: "none", width: "100%", borderTop: "1px solid #dfdfe0"}}>
+    {this.state.bottom_trains.map((t) =>
+      <li key = {t.tripId} style = {{padding: "10px 15px", border: "none", borderBottom: "1px solid #dfdfe0", display: "flex", float: "left", listStyle: "none", marginBottom: "0", overflow:"hidden", alignItems: "center"}}>
+        <span style = {{float: "left", backgroundColor: "gray", textAlign: "center", color:"white", fontSize: "x-large", margin:"0", height:"32px", width: "32px", border: "2px solid #fff", borderRadius: "50%", display: "block", backgroundImage: "background-image: url(https://new.mta.info/themes/custom/bootstrap_mta/js/apps/ec805c7415caff62cc2641469574683c.svg)"}}><p style={{margin:"0", marginTop: "2px"}}>{t.pattern.id.substr(8,1)}</p></span>
+        <span style = {{marginLeft: "10px", position: "static"}}>{t.tripHeadsign}</span>
+        <span style = {{marginLeft: "auto", float: "right", backgroundColor: "#777",borderRadius: "10px",color: "#fff", display: "inline-block",fontSize: "14px",fontWeight: "700",lineHeight: "1",minWidth: "10px",padding: "3px 7px", textAlign: "center",verticalAlign: "middle",whiteSpace: "nowrap"}}>{new Date(t.departureFmt).toLocaleTimeString("en-US", {timeZone: "America/New_York"})}</span>
+        <span style = {{fontWeight: "700",paddingLeft: "5px",position: "relative",width: "20%"}}>{zeroPad(Math.floor((new Date(t.departureFmt) - new Date())/60000),2)} mins away</span>
+      </li>
+    )}
+  </ul>
+)
+  return(
+    <div style = {{fontFamily: "Helvetica,Arial,sans-serif", marginLeft:"5%", marginRight:"5%"}}>
+    <p> Last refreshed: {this.state.last_refreshed_readable} ({this.state.current_time - this.state.last_refreshed} seconds ago)</p>
+    <h1>Clinton Washington Avenue Trains</h1>
+    <h2>{this.state.top_headsign}</h2>
+    <div style = {{display:"block"}}>
+      {top_trains}
     </div>
-  )
+    <h2>{this.state.bottom_headsign}</h2>
+      {bottom_trains}
+    </div>
+    );
+}
 }
