@@ -14,6 +14,8 @@ export default class PollingExample extends Component {
   };
 
   componentDidMount() {
+  this.tick();
+  this.tock();
   this.interval = setInterval(this.tick, 30000);
   this.interval = setInterval(this.tock, 1000);
 }
